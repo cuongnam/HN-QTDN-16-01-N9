@@ -136,6 +136,51 @@
         
         <menuitem id="menu_projects_root" name="Dự án"/>
         <menuitem id="menu_projects" name="Danh sách dự án" parent="menu_projects_root" action="action_projects"/>
+        <record id="view_taskss_tree" model="ir.ui.view">
+            <field name="name">taskss.tree</field>
+            <field name="model">taskss</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="taskss_id"/>
+                    <field name="taskss_name"/>
+                    <field name="projects_id"/>
+                    <field name="start_date"/>
+                    <field name="deadline"/>
+                    <field name="priority"/>
+                    <field name="progress"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_taskss_form" model="ir.ui.view">
+            <field name="name">taskss.form</field>
+            <field name="model">taskss</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="taskss_id"/>
+                            <field name="taskss_name"/>
+                            <field name="projects_id"/>
+                            <field name="nhan_vien_ids" widget="many2many_tags"/>
+                            <field name="start_date"/>
+                            <field name="deadline"/>
+                            <field name="priority"/>
+                            <field name="progress" readonly="1"/>
+                            <field name="status"/>
+                            <field name="ly_do"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_taskss" model="ir.actions.act_window">
+            <field name="name">Danh sách công việc</field>
+            <field name="res_model">taskss</field>
+            <field name="view_mode">tree,form</field>
+        </record>
         <menuitem id="menu_taskss" name="Danh sách công việc" parent="menu_projects_root" action="action_taskss"/>
     </data>
 </odoo>
