@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_lich_su_lam_viec_tree" model="ir.ui.view">
+        <field name="name">lich_su_lam_viec.tree</field>
+        <field name="model">lich_su_lam_viec</field>
+        <field name="arch" type="xml">
+            <tree string="Lịch Sử Làm Việc">
+                <field name="ten_lich_su"/>
+                <field name="nhan_vien_id"/>
+                <field name="chuc_vu_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_lich_su_lam_viec_form" model="ir.ui.view">
+        <field name="name">lich_su_lam_viec.form</field>
+        <field name="model">lich_su_lam_viec</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết Lịch Sử Làm Việc">
+                <sheet>
+                    <group col="4">
+                        <field name="ten_lich_su"/>
+                        <field name="nhan_vien_id"/>
+                        <field name="chuc_vu_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_lich_su_lam_viec_search" model="ir.ui.view">
+        <field name="name">lich_su_lam_viec.search</field>
+        <field name="model">lich_su_lam_viec</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="ten_lich_su"/>
+                <field name="nhan_vien_id"/>
+                <field name="chuc_vu_id"/>
+                <searchpanel>
+                    <field name="nhan_vien_id" select="multi"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+    <record id="action_lich_su_lam_viec" model="ir.actions.act_window">
+        <field name="name">Lịch Sử Làm Việc</field>
+        <field name="res_model">lich_su_lam_viec</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_lich_su_lam_viec_search"/>
+    </record>
+</odoo>
