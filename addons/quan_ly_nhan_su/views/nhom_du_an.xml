@@ -17,16 +17,18 @@
         <field name="arch" type="xml">
             <form string="Các Nhóm">
                 <sheet>
-                    <group col="4">
+                    <group>
                         <field name="ten_nhom"/>
-                        <field name="nhan_vien_ids" widget="many2many_tags"/>  <!-- Đã sửa cho khớp -->
+                        <field name="mo_ta"/>
+                    </group>
+                    <group>
+                        <field name="nhan_vien_ids" widget="many2many_tags"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Search View cho Nhóm Dự Án -->
     <record id="view_nhom_du_an_search" model="ir.ui.view">
         <field name="name">view.nhom.du.an.search</field>
         <field name="model">nhom_du_an</field>
@@ -38,11 +40,15 @@
         </field>
     </record>
 
-    <!-- Action cho Nhóm Dự Án -->
     <record id="action_nhom_du_an" model="ir.actions.act_window">
-        <field name="name">Các Nhóm</field>
+        <field name="name">Nhóm Dự Án</field>
         <field name="res_model">nhom_du_an</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_nhom_du_an_search"/>
     </record>
 </odoo>
+
+
+
+
+

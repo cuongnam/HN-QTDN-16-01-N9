@@ -1,38 +1,40 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "quan_ly_nhan_su",
-
+    'name': "Quản Lý Nhân Sự",
     'summary': """
-        Short (1 phrase/line) summary of the module's purpose, used as
-        subtitle on modules listing or apps.openerp.com""",
-
-    'description': """
-        Long description of module's purpose
+        Module quản lý nhân sự - Kết hợp từ các project N6, N7, N9
     """,
-
-    'author': "My Company",
+    'description': """
+        Module quản lý nhân sự tích hợp:
+        - Quản lý thông tin nhân viên
+        - Quản lý chức vụ
+        - Quản lý phòng ban
+        - Quản lý nhóm dự án
+        - Lịch sử làm việc
+    """,
+    'author': "CNTT 15-03",
     'website': "http://www.yourcompany.com",
-
-    # Categories can be used to filter modules in modules listing
-    # Check https://github.com/odoo/odoo/blob/15.0/odoo/addons/base/data/ir_module_category_data.xml
-    # for the full list
-    'category': 'Uncategorized',
-    'version': '0.1',
-
-    # any module necessary for this one to work correctly
+    'category': 'Human Resources',
+    'version': '1.0',
+    'license': 'LGPL-3',
     'depends': ['base'],
-
-    # always loaded
     'data': [
         'security/ir.model.access.csv',
         'views/chuc_vu.xml',
-        'views/nhom_du_an_view.xml',
-        'views/nhan_vien_view.xml',
-        'views/lich_su_lam_viec_view.xml',
+        'views/phong_ban.xml',
+        'views/nhom_du_an.xml',
+        'views/nhan_vien.xml',
+        'views/lich_su_lam_viec.xml',
         'views/menu.xml',
     ],
-    # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',
     ],
+    'installable': True,
+    'application': True,
+    'auto_install': False,
 }
+
+
+
+

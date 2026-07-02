@@ -5,7 +5,6 @@
             id="menu_root"
             name="Quản Lý Nhân Sự"
             sequence="0"/>
-        
 
         <menuitem name="Chức vụ" 
             id="menu_chuc_vu" 
@@ -14,22 +13,34 @@
             action="action_chuc_vu"
         />
 
-        <menuitem name="Nhóm Nhân Viên"
+        <menuitem name="Phòng ban" 
+            id="menu_phong_ban" 
+            parent="menu_root" 
+            sequence="2"
+            action="action_phong_ban"
+        />
+
+        <menuitem name="Nhóm Dự Án"
             id="menu_nhom_du_an"
             parent="menu_root"
-            sequence="2"
+            sequence="3"
             action="action_nhom_du_an"/>
 
         <menuitem name="Lịch Sử Làm Việc"
             id="menu_lich_su_lam_viec"
             parent="menu_root"
-            sequence="3"
+            sequence="4"
             action="action_lich_su_lam_viec"/>
 
         <menuitem name="Nhân Viên"
             id="menu_nhan_vien"
             parent="menu_root"
-            sequence="4"
+            sequence="5"
             action="action_nhan_vien"/>
     </data>
 </odoo>
+
+
+
+
+
