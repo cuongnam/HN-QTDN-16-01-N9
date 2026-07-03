@@ -1,39 +1,49 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Quản Lý Công Việc",
+    'name': "quan_ly_cong_viec",
+
     'summary': """
-        Module quản lý công việc - Kết hợp từ các project N6, N7
-    """,
+        Short (1 phrase/line) summary of the module's purpose, used as
+        subtitle on modules listing or apps.openerp.com""",
+
     'description': """
-        Module quản lý công việc tích hợp:
-        - Quản lý công việc trong dự án
-        - Nhật ký công việc
-        - Đánh giá nhân viên
-        - Theo dõi tiến độ công việc
-        - Quản lý mức độ ưu tiên
+        Long description of module's purpose
     """,
-    'author': "CNTT 15-03",
+
+    'author': "My Company",
     'website': "http://www.yourcompany.com",
-    'category': 'Project',
-    'version': '1.0',
-    'depends': ['base', 'quan_ly_nhan_su', 'quan_ly_du_an'],
+
+    # Categories can be used to filter modules in modules listing
+    # Check https://github.com/odoo/odoo/blob/15.0/odoo/addons/base/data/ir_module_category_data.xml
+    # for the full list
+    'category': 'Uncategorized',
+    'version': '0.1',
+
+    # any module necessary for this one to work correctly
+    'depends': ['base','quan_ly_nhan_su'],
+
+    # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'data/cron.xml',
-        'views/thong_bao_noi_bo_view.xml',
+        'views/dashboard_view.xml',
+        'views/du_an_view.xml',
+        'views/giai_doan_cong_viec_view.xml',
         'views/cong_viec_view.xml',
         'views/nhat_ky_cong_viec_view.xml',
+        'views/tai_nguyen.xml',
         'views/danh_gia_nhan_vien_view.xml',
-        'views/du_an_view_extend.xml',
-        'views/nhan_vien_view_extend.xml',
         'views/menu.xml',
     ],
+    # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',
     ],
-    'installable': True,
-    'application': True,
-    'auto_install': False,
+    
+    'icon': '/quan_ly_cong_viec/static/description/image.png',
+    
+    'assets': {
+        'web.assets_backend': [
+            '/quan_ly_cong_viec/static/css/dashboard.css',
+        ],
+    },
 }
-
-
