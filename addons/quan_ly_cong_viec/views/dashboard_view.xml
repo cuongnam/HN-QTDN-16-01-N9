@@ -3,53 +3,117 @@
         <field name="name">Dashboard View</field>
         <field name="model">dashboard</field>
         <field name="arch" type="xml">
-            <form string="Dashboard">
-                <group>
-                    <!-- <separator string="Tổng Quan"/> -->
+            <form string="Dashboard" class="o_dashboard_clean_form">
+                <style>
+                    .o_dashboard_clean_form .o_form_sheet_background {
+                        background-color: #f4f6f9 !important;
+                    }
+                    .dashboard-section-title {
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #495057;
+                        margin: 20px 0 12px 10px;
+                        letter-spacing: 0.5px;
+                    }
+                    .dashboard-container {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                        gap: 15px;
+                        padding: 10px;
+                        margin-bottom: 15px;
+                    }
+                    .dashboard-card {
+                        background-color: #ffffff !important;
+                        border: 1px solid #e3e6f0;
+                        border-radius: 6px;
+                        padding: 18px 20px;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+                        transition: all 0.2s ease;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        min-height: 95px;
+                    }
+                    .dashboard-card:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+                    }
+                    .dashboard-card .title {
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: #858796;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        margin-bottom: 6px;
+                    }
+                    .dashboard-card .value {
+                        font-size: 26px;
+                        font-weight: 700;
+                        color: #4e73df;
+                        line-height: 1.2;
+                    }
+                    /* Thanh viền màu nhẹ nhàng bên trái để phân loại thay vì tô màu cả khối */
+                    .border-primary { border-left: 4px solid #4e73df !important; }   /* Xanh dương */
+                    .border-success { border-left: 4px solid #1cc88a !important; }   /* Xanh lá */
+                    .border-info { border-left: 4px solid #36b9cc !important; }      /* Xanh ngọc */
+                    .border-warning { border-left: 4px solid #f6c23e !important; }   /* Vàng */
+                    .border-danger { border-left: 4px solid #e74a3b !important; }    /* Đỏ */
+                    .border-secondary { border-left: 4px solid #858796 !important; } /* Xám */
+
+                    /* Đổi màu chữ số tương ứng với nhóm viền */
+                    .border-primary .value { color: #4e73df; }
+                    .border-success .value { color: #1cc88a; }
+                    .border-info .value { color: #36b9cc; }
+                    .border-warning .value { color: #f6c23e; }
+                    .border-danger .value { color: #e74a3b; }
+                    .border-secondary .value { color: #5a5c69; }
+                </style>
+
+                <sheet>
+                    <div class="dashboard-section-title">THỐNG KÊ TỔNG QUAN</div>
                     <div class="dashboard-container">
-                        <div class="dashboard-card blue">
+                        <div class="dashboard-card border-primary">
                             <span class="title">Tổng Số Nhân Viên</span>
                             <span class="value"><field name="so_luong_nhan_vien" readonly="1"/></span>
                         </div>
-                        <div class="dashboard-card green oe_stat_button"
-                            data-action-id="action_du_an"
-                            data-view-mode="view_du_an_graph">
+                        <div class="dashboard-card border-success">
                             <span class="title">Số Lượng Dự Án</span>
                             <span class="value"><field name="so_luong_du_an" readonly="1"/></span>
                         </div>
-
-                        <div class="dashboard-card brown">
+                        <div class="dashboard-card border-info">
                             <span class="title">Số Lượng Công Việc</span>
                             <span class="value"><field name="so_luong_cong_viec" readonly="1"/></span>
                         </div>
-                        <div class="dashboard-card yellow">
+                        <div class="dashboard-card border-warning">
                             <span class="title">Số Lượng Đánh Giá</span>
                             <span class="value"><field name="so_luong_danh_gia" readonly="1"/></span>
                         </div>
-
                     </div>
 
-                    <separator/>
+                    <div class="dashboard-section-title">TRẠNG THÁI CHI TIẾT DỰ ÁN</div>
                     <div class="dashboard-container">
-                        <div class="dashboard-card brown">
+                        <div class="dashboard-card border-success">
                             <span class="title">Dự Án Hoàn Thành</span>
                             <span class="value"><field name="du_an_hoan_thanh" readonly="1"/></span>
                         </div>
-                        <div class="dashboard-card green">
+                        <div class="dashboard-card border-info">
                             <span class="title">Dự Án Đang Thực Hiện</span>
                             <span class="value"><field name="du_an_dang_thuc_hien" readonly="1"/></span>
                         </div>
-                        <div class="dashboard-card blue">
+                        <div class="dashboard-card border-primary">
                             <span class="title">Dự Án Chưa Bắt Đầu</span>
                             <span class="value"><field name="du_an_chua_bat_dau" readonly="1"/></span>
                         </div>
-                        <div class="dashboard-card red">
+                        <div class="dashboard-card border-warning">
                             <span class="title">Dự Án Tạm Dừng</span>
                             <span class="value"><field name="du_an_tam_dung" readonly="1"/></span>
                         </div>
+                        <div class="dashboard-card border-secondary">
+                            <span class="title">Dự Án Đã Hủy</span>
+                            <span class="value"><field name="du_an_da_huy" readonly="1"/></span>
+                        </div>
                     </div>
-
-                </group>
+                </sheet>
             </form>
         </field>
     </record>

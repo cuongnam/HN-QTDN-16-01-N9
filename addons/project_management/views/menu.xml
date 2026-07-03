@@ -1,53 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-        <menuitem
-            id="menu_root"
-            name="PM"
-            sequence="0"/>
-          
-        <menuitem name="Quản lý dự án" 
-            id="menu_projects" 
-            parent="menu_root" 
-            sequence="1"
-            action="action_projects"
-        />
 
-        
-        <menuitem name="Quản lý công việc" 
-            id="menu_taskss" 
-            parent="menu_root" 
-            sequence="2"
-            action="action_taskss"
-        />
+    <menuitem id="menu_project_management_root"
+              name="Project Management"
+              sequence="15"/>
 
-        <menuitem name="Ngân sách dự án" 
-            id="menu_budgets" 
-            parent="menu_root" 
-            sequence="3"
-            action="action_budgets"
-        />
+    <menuitem id="menu_pm_operations"
+              name="Quản lý"
+              parent="menu_project_management_root"
+              sequence="1"/>
 
-        <menuitem name="Chi phí dự án" 
-            id="menu_expenses" 
-            parent="menu_root" 
-            sequence="4"
-            action="action_expenses"
-        />
-        
-        <menuitem name="Biểu đồ dự án" 
-            id="menu_chart" 
-            parent="menu_root" 
-            sequence="5"
-            action="action_bieu_do_du_an"
-        />
+    <menuitem id="menu_pm_projects"
+              name="Dự án"
+              parent="menu_pm_operations"
+              action="action_projects"
+              sequence="10"/>
 
-        <menuitem name="Biểu đồ công việc" 
-            id="menu_chartoftasks" 
-            parent="menu_root" 
-            sequence="6"
-            action="action_bieu_do_cong_viec"
-        />
+    <menuitem id="menu_pm_taskss"
+              name="Công việc"
+              parent="menu_pm_operations"
+              action="action_taskss"
+              sequence="20"/>
 
-    </data>
+    <menuitem id="menu_pm_budgets"
+              name="Ngân sách"
+              parent="menu_pm_operations"
+              action="action_budgets"
+              sequence="30"/>
+
 </odoo>
