@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 class NhanVien(models.Model):
     _name = 'nhan_vien'
@@ -8,7 +9,9 @@ class NhanVien(models.Model):
     ma_dinh_danh = fields.Char("Mã Định Danh")
     ngay_sinh = fields.Date("Ngày Sinh")  
     que_quan = fields.Char("Quê Quán")  
-    email = fields.Char("Email") 
+    email = fields.Char("Email")
+
+
     gioi_tinh = fields.Selection(
         selection=[
             ('nam','Nam'),
@@ -16,7 +19,12 @@ class NhanVien(models.Model):
         ], 
         string="Giới Tính"
     )
-    so_dien_thoai = fields.Char("Số Điện Thoại")  
+    so_dien_thoai = fields.Char("Số Điện Thoại")
+    # THÊM DÒNG NÀY ĐỂ CHẶN TRÙNG MÃ DỰ ÁN DƯỚI DATABASE
+    _sql_constraints = [
+        ('email_unique', 'unique(email)', 'Email này đã tồn tại trong hệ thống! Vui lòng nhập email khác.'),
+        ('so_dien_thoai_unique', 'unique(so_dien_thoai)', 'Số điện thoại này đã tồn tại trong hệ thống! Vui lòng nhập sđt khác.')
+    ]  
     lich_su_lam_viec_ids = fields.One2many('lich_su_lam_viec', 'nhan_vien_id', string="Lịch Sử Làm Việc")
     nhom_du_an_ids = fields.Many2many('nhom_du_an', string='Nhóm Dự Án')
     
@@ -64,7 +72,25 @@ class NhanVien(models.Model):
         for record in self:
             record.display_name = f"{record.ho_va_ten} ({record.ma_dinh_danh})" if record.ma_dinh_danh else record.ho_va_ten
             
-            
+    @api.constrains('email')
+    def _check_unique_email(self):
+        """ Bắn lỗi cảnh báo nếu phát hiện email bị trùng lặp trên giao diện """
+        for rec in self:
+            if rec.email:
+                # Tìm kiếm xem có bản ghi nào khác có cùng email nhưng khác ID bản ghi hiện tại không
+                duplicate = self.search([('email', '=', rec.email), ('id', '!=', rec.id)], limit=1)
+                if duplicate:
+                    raise ValidationError(f"Email '{rec.email}' đã được sử dụng. Vui lòng nhập email khác!") 
+
+    @api.constrains('so_dien_thoai')
+    def _check_unique_so_dien_thoai(self):
+        """ Bắn lỗi cảnh báo nếu phát hiện sđt bị trùng lặp trên giao diện """
+        for rec in self:
+            if rec.so_dien_thoai:
+                # Tìm kiếm xem có bản ghi nào khác có cùng sđt nhưng khác ID bản ghi hiện tại không
+                duplicate = self.search([('so_dien_thoai', '=', rec.so_dien_thoai), ('id', '!=', rec.id)], limit=1)
+                if duplicate:
+                    raise ValidationError(f"Số điện thoại '{rec.so_dien_thoai}' đã được sử dụng. Vui lòng nhập số khác!")                      
     
                 
     

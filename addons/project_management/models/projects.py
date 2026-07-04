@@ -248,7 +248,11 @@ class ProjectManagementProjects(models.Model):
     _description = 'Project Management Projects'
     _rec_name = 'projects_name'
 
-    projects_id = fields.Char(string='Mã dự án', required=True)
+    projects_id = fields.Char(string='Mã dự án', required=True)    
+    # THÊM DÒNG NÀY ĐỂ CHẶN TRÙNG MÃ DỰ ÁN DƯỚI DATABASE
+    _sql_constraints = [
+        ('projects_id_unique', 'unique(projects_id)', 'Mã dự án này đã tồn tại trong hệ thống! Vui lòng nhập mã khác.')
+    ]
     projects_name = fields.Char(string='Tên dự án (EN)', required=True)
     manager_name = fields.Many2one('nhan_vien', string='Trưởng dự án') 
     du_an_id = fields.Many2one('du_an', string='Dự án gốc (QLCV)', ondelete='set null')
@@ -277,6 +281,27 @@ class ProjectManagementProjects(models.Model):
             else:
                 rec.progress = 0.0
 
+    @api.constrains('projects_id')
+    def _check_unique_projects_id(self):
+        """ Bắn lỗi cảnh báo nếu phát hiện mã dự án bị trùng lặp trên giao diện """
+        for rec in self:
+            if rec.projects_id:
+                # Tìm kiếm xem có bản ghi nào khác có cùng projects_id nhưng khác ID bản ghi hiện tại không
+                duplicate = self.search([('projects_id', '=', rec.projects_id), ('id', '!=', rec.id)], limit=1)
+                if duplicate:
+                    raise ValidationError(f"Mã dự án '{rec.projects_id}' đã được sử dụng cho dự án '{duplicate.projects_name}'. Vui lòng chọn mã khác!")            
+
+    @api.constrains('start_date', 'actual_end_date')
+    def _check_dates(self):
+        """ Ràng buộc: Ngày kết thúc thực tế phải lớn hơn hoặc bằng Ngày bắt đầu """
+        for rec in self:
+            if rec.start_date and rec.actual_end_date:
+                if rec.actual_end_date < rec.start_date:
+                    raise ValidationError(
+                        f"Dự án '{rec.projects_name}' có ngày kết thúc thực tế ({rec.actual_end_date}) "
+                        f"nhỏ hơn ngày bắt đầu ({rec.start_date})! Vui lòng kiểm tra lại."
+                    )
+                
     @api.model
     def create(self, vals):
         if not vals.get('du_an_id') and vals.get('projects_name'):

@@ -9,7 +9,16 @@ class CongViec(models.Model):
 
     ten_cong_viec = fields.Char(string='Tên Công Việc' )
     mo_ta = fields.Text(string='Mô Tả')
-    du_an_id = fields.Many2one('du_an', string='Dự Án', required=True, ondelete='cascade')
+    # du_an_id = fields.Many2one('du_an', string='Dự Án', required=True, ondelete='cascade')
+    # SỬA DÒNG NÀY: Thêm domain lọc trạng thái dự án
+    du_an_id = fields.Many2one(
+        'du_an', 
+        string='Dự Án', 
+        required=True, 
+        ondelete='cascade',
+        domain="[('tien_do_du_an', 'not in', ['huy_bo', 'hoan_thanh'])]"
+    )
+
 
     nhan_vien_ids = fields.Many2many('nhan_vien', 'cong_viec_nhan_vien_rel', 'cong_viec_id', 'nhan_vien_id', string='Nhân Viên Tham Gia')
 
@@ -73,13 +82,63 @@ class CongViec(models.Model):
             if record.du_an_id and record.du_an_id.tien_do_du_an == 'hoan_thanh':
                 raise ValidationError("Không thể thêm công việc vào dự án đã hoàn thành.")
     
-    
+    # @api.constrains('nhan_vien_ids')
+    # def _check_nhan_vien_trong_du_an(self):
+    #     for record in self:
+    #         if record.du_an_id:
+    #             nhan_vien_du_an_ids = record.du_an_id.nhan_vien_ids.ids
+    #             for nhan_vien in record.nhan_vien_ids:
+    #                 if nhan_vien.id not in nhan_vien_du_an_ids:
+    #                     raise ValidationError(f"Nhân viên {nhan_vien.display_name} không thuộc dự án này.")
 
-    @api.constrains('nhan_vien_ids')
-    def _check_nhan_vien_trong_du_an(self):
+    @api.constrains('du_an_id')
+    def _check_du_an_tien_do(self):
         for record in self:
-            if record.du_an_id:
-                nhan_vien_du_an_ids = record.du_an_id.nhan_vien_ids.ids
-                for nhan_vien in record.nhan_vien_ids:
-                    if nhan_vien.id not in nhan_vien_du_an_ids:
-                        raise ValidationError(f"Nhân viên {nhan_vien.display_name} không thuộc dự án này.")
+            if record.du_an_id and record.du_an_id.tien_do_du_an in ['hoan_thanh', 'huy_bo']:
+                raise ValidationError("Không thể thêm hoặc gắn công việc vào dự án đã hoàn thành hoặc đã hủy bỏ.")
+            
+    @api.model
+    def create(self, vals):
+        """ LUỒNG NGƯỢC: Tạo từ quan_ly_cong_viec -> tự động sinh bên project_management """
+        record = super(CongViec, self).create(vals)
+        
+        # Nếu đang trong luồng đồng bộ xuôi từ PM sang hoặc không có dự án thì bỏ qua
+        if self.env.context.get('skip_sync') or not record.du_an_id:
+            return record
+
+        # Tìm dự án liên kết bên module project_management
+        pm_project = self.env['projects'].search([('du_an_id', '=', record.du_an_id.id)], limit=1)
+        if pm_project:
+            # Tạo mã tự động cho Taskss dựa trên ID
+            task_id_code = f"TASK{record.id:04d}"
+            
+            self.env['taskss'].with_context(skip_sync=True).create({
+                'taskss_id': task_id_code,
+                'taskss_name': record.ten_cong_viec or 'Công việc mới',
+                'projects_id': pm_project.id,
+                'cong_viec_id': record.id,
+                'deadline': record.han_chot or False,
+                'ly_do': record.mo_ta or '',
+            })
+        return record
+
+    def write(self, vals):
+        """ Đồng bộ cập nhật ngược từ quan_ly_cong_viec về lại project_management """
+        res = super(CongViec, self).write(vals)
+        if self.env.context.get('skip_sync'):
+            return res
+
+        for record in self:
+            # Tìm taskss liên kết
+            pm_task = self.env['taskss'].search([('cong_viec_id', '=', record.id)], limit=1)
+            if pm_task:
+                up_vals = {}
+                if 'ten_cong_viec' in vals:
+                    up_vals['taskss_name'] = vals['ten_cong_viec']
+                if 'han_chot' in vals:
+                    up_vals['deadline'] = vals['han_chot']
+                if 'mo_ta' in vals:
+                    up_vals['ly_do'] = vals['mo_ta']
+                if up_vals:
+                    pm_task.with_context(skip_sync=True).write(up_vals)
+        return res
