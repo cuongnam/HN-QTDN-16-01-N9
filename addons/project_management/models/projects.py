@@ -239,7 +239,7 @@
 #     def action_cancel(self):
 #         self.write({'status': 'cancelled'})
 
-
+from datetime import date
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 
@@ -270,16 +270,25 @@ class ProjectManagementProjects(models.Model):
     ly_do_1 = fields.Text(string='Lý do / Ghi chú')
     task_ids = fields.One2many('taskss', 'projects_id', string='Danh sách Tasks')
     budget_ids = fields.One2many('budgets', 'projects_id', string='Ngân sách dự án')
-    progress = fields.Float(string='Tiến độ (%)', compute='_compute_progress')
+    progress = fields.Float(string='Tiến độ (%)', compute='_compute_progress',store=True)
 
-    @api.depends('task_ids.progress')
+    @api.depends('task_ids.status')
+    # def _compute_progress(self):
+    #     for rec in self:
+    #         tasks = rec.task_ids
+    #         if tasks:
+    #             rec.progress = sum(tasks.mapped('progress')) / len(tasks)
+    #         else:
+    #             rec.progress = 0.0
     def _compute_progress(self):
-        for rec in self:
-            tasks = rec.task_ids
-            if tasks:
-                rec.progress = sum(tasks.mapped('progress')) / len(tasks)
+        for project in self:
+            total_tasks = len(project.task_ids)
+            completed_tasks = len(project.task_ids.filtered(lambda task: task.status == 'close'))
+            
+            if total_tasks > 0:
+                project.progress = (completed_tasks / total_tasks) * 100
             else:
-                rec.progress = 0.0
+                project.progress = 0
 
     @api.constrains('projects_id')
     def _check_unique_projects_id(self):
@@ -369,3 +378,16 @@ class ProjectManagementProjects(models.Model):
 
     def action_cancel(self):
         self.write({'status': 'cancelled'})
+    
+    def action_view_task_chart(self):
+        self.ensure_one()  # Đảm bảo phương thức chỉ xử lý một bản ghi
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Biểu Đồ Công Việc Công Việc',
+            'res_model': 'taskss',
+            'view_mode': 'graph',
+            'domain': [('projects_id', '=', self.id)],  # Lọc công việc theo dự án hiện tại
+            # Đặt giá trị mặc định cho trường projects_id
+            'context': {'search_default_group_by_projects_id': self.id},
+            'target': 'current',
+        }

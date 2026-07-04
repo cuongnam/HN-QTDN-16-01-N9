@@ -3,7 +3,7 @@
 
     <menuitem id="menu_project_management_root"
               name="Project Management"
-              sequence="15"/>
+              sequence="0"/>
 
     <menuitem id="menu_pm_operations"
               name="Quản lý"
@@ -14,18 +14,29 @@
               name="Dự án"
               parent="menu_pm_operations"
               action="action_projects"
-              sequence="10"/>
+              sequence="2"/>
 
     <menuitem id="menu_pm_taskss"
               name="Công việc"
               parent="menu_pm_operations"
               action="action_taskss"
-              sequence="20"/>
+              sequence="3"/>
 
     <menuitem id="menu_pm_budgets"
               name="Ngân sách"
               parent="menu_pm_operations"
               action="action_budgets"
-              sequence="30"/>
+              sequence="4"/>
+    <menuitem id="menu_pm_charts"
+              name="Biểu đồ dự án"
+              parent="menu_pm_operations"
+              action="action_bieu_do_du_an"
+              sequence="5"/>
+    <menuitem id="menu_pm_chartoflasks"
+              name="Biểu đồ công việc"
+              parent="menu_pm_operations"
+              action="action_bieu_do_cong_viec"
+              sequence="6"/>          
+
 
 </odoo>

@@ -67,7 +67,7 @@
 #             if rec.projects_id and rec.projects_id.status == 'cancelled':
 #                 raise ValidationError("Không thể thêm hoặc chỉnh sửa chi phí phát sinh cho một dự án đã bị hủy bỏ!")
 
-
+from datetime import date
 from odoo import models, fields, api
 
 class ProjectManagementTasks(models.Model):
@@ -130,3 +130,18 @@ class ProjectManagementTasks(models.Model):
                 if up_vals:
                     rec.cong_viec_id.with_context(skip_sync=True).write(up_vals)
         return res
+    
+    @api.depends('start_date', 'deadline')
+    def _compute_progress(self):
+        today = date.today()
+        for project in self:
+            if project.start_date and project.deadline:
+                total_days = (project.deadline - project.start_date).days
+                elapsed_days = (today - project.start_date).days
+
+                if total_days > 0:
+                    project.progress = max(0, min(100, (elapsed_days / total_days) * 100))
+                else:
+                    project.progress = 100 if today >= project.deadline else 0
+            else:
+                project.progress = 0

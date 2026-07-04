@@ -28,6 +28,8 @@
         'views/projects.xml',
         'views/taskss.xml',
         'views/budgets.xml',
+        'views/chart.xml',
+        'views/chartoftasks.xml',
         'views/menu.xml',
     ],
 
