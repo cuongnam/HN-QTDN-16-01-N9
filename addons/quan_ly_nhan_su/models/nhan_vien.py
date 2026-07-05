@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+from datetime import date
 
 class NhanVien(models.Model):
     _name = 'nhan_vien'
@@ -25,7 +26,16 @@ class NhanVien(models.Model):
         ('email_unique', 'unique(email)', 'Email này đã tồn tại trong hệ thống! Vui lòng nhập email khác.'),
         ('so_dien_thoai_unique', 'unique(so_dien_thoai)', 'Số điện thoại này đã tồn tại trong hệ thống! Vui lòng nhập sđt khác.')
     ]  
-    lich_su_lam_viec_ids = fields.One2many('lich_su_lam_viec', 'nhan_vien_id', string="Lịch Sử Làm Việc")
+    # lich_su_lam_viec_ids = fields.One2many('lich_su_lam_viec', 'nhan_vien_id', string="Lịch Sử Làm Việc")
+    lich_su_cong_tac_ids = fields.One2many(
+        "lich_su_cong_tac", 
+        inverse_name="nhan_vien_id", 
+        string = "Danh sách lịch sử công tác")
+    danh_sach_chung_chi_bang_cap_ids = fields.One2many(
+        "danh_sach_chung_chi_bang_cap", 
+        inverse_name="nhan_vien_id", 
+        string = "Danh sách chứng chỉ bằng cấp")
+    
     nhom_du_an_ids = fields.Many2many('nhom_du_an', string='Nhóm Dự Án')
     
     du_an_ids = fields.Many2many('du_an', 'nhan_vien_du_an_rel', 'nhan_vien_id', 'du_an_id', string='Dự Án Đang Tham Gia')
@@ -36,6 +46,8 @@ class NhanVien(models.Model):
     
     display_name = fields.Char(string='Tên Hiển Thị', compute='_compute_display_name', store=True)
     
+    tuoi = fields.Integer("Tuổi", compute="_compute_tuoi", store=True)
+
     ho_ten_dem = fields.Char("Họ Tên Đệm")
     
     ten = fields.Char("Tên")
@@ -92,5 +104,15 @@ class NhanVien(models.Model):
                 if duplicate:
                     raise ValidationError(f"Số điện thoại '{rec.so_dien_thoai}' đã được sử dụng. Vui lòng nhập số khác!")                      
     
-                
+    @api.depends("ngay_sinh")
+    def _compute_tuoi(self):
+        for record in self:
+            if record.ngay_sinh:
+                year_now = date.today().year
+                record.tuoi = year_now - record.ngay_sinh.year            
     
+    @api.constrains('tuoi')
+    def _check_tuoi(self):
+        for record in self:
+            if record.tuoi < 18:
+                raise ValidationError("Tuổi không được bé hơn 18")

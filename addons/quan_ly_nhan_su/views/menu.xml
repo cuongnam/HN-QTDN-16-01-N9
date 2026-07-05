@@ -5,31 +5,56 @@
             id="menu_root"
             name="Quản Lý Nhân Sự"
             sequence="0"/>
-        
 
+        <menuitem name="Danh mục chung" 
+            id="menu_danh_muc_chung" 
+            parent="menu_root" 
+            sequence="1"
+        />
+        <menuitem name="Danh mục đơn vị" 
+            id="menu_don_vi" 
+            parent="menu_danh_muc_chung" 
+            sequence="1"
+            action="action_don_vi"
+        />
         <menuitem name="Chức vụ" 
             id="menu_chuc_vu" 
             parent="menu_root" 
-            sequence="1"
+            sequence="2"
             action="action_chuc_vu"
+        />
+
+        <menuitem name="Danh mục chứng chỉ, bằng cấp" 
+            id="menu_chung_chi_bang_cap" 
+            parent="menu_danh_muc_chung" 
+            sequence="3"
+            action="action_chung_chi_bang_cap"
+        />
+
+        <menuitem name="Lịch sử công tác" 
+            id="menu_lich_su_cong_tac" 
+            parent="menu_root" 
+            sequence="4"
+            action="action_lich_su_cong_tac"
+        />
+
+        <menuitem name="Danh sách chứng chỉ, bằng cấp" 
+            id="menu_danh_sach_chung_chi_bang_cap" 
+            parent="menu_root" 
+            sequence="4"
+            action="action_danh_sach_chung_chi_bang_cap"
         />
 
         <menuitem name="Nhóm Nhân Viên"
             id="menu_nhom_du_an"
             parent="menu_root"
-            sequence="2"
+            sequence="5"
             action="action_nhom_du_an"/>
-
-        <menuitem name="Lịch Sử Làm Việc"
-            id="menu_lich_su_lam_viec"
-            parent="menu_root"
-            sequence="3"
-            action="action_lich_su_lam_viec"/>
 
         <menuitem name="Nhân Viên"
             id="menu_nhan_vien"
             parent="menu_root"
-            sequence="4"
+            sequence="6"
             action="action_nhan_vien"/>
     </data>
 </odoo>

@@ -41,12 +41,11 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Lịch sử làm việc">
-                            <field name="lich_su_lam_viec_ids">
-                                <tree>
-                                    <field name="ten_lich_su"/>
-                                </tree>
-                            </field>
+                        <page string="Danh sách lịch sử công tác">
+                            <field name="lich_su_cong_tac_ids"/>
+                        </page>
+                        <page string="Danh sách chứng chỉ bằng cấp">
+                            <field name="danh_sach_chung_chi_bang_cap_ids"/>
                         </page>
                         <page string="Nhóm Dự Án">
                             <field name="nhom_du_an_ids" widget="many2many_tags"/>
