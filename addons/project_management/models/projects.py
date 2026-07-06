@@ -256,7 +256,13 @@ class ProjectManagementProjects(models.Model):
     projects_name = fields.Char(string='Tên dự án (EN)', required=True)
     manager_name = fields.Many2one('nhan_vien', string='Trưởng dự án') 
     du_an_id = fields.Many2one('du_an', string='Dự án gốc (QLCV)', ondelete='set null')
-    
+    nhom_ids = fields.Many2many(
+        'nhom_du_an',
+        'projects_nhom_rel',
+        'project_id',
+        'nhom_id',
+        string='Nhóm thực hiện'
+    )
     start_date = fields.Date(string='Ngày bắt đầu')
     actual_end_date = fields.Date(string='Ngày kết thúc thực tế')
     
@@ -283,7 +289,12 @@ class ProjectManagementProjects(models.Model):
     def _compute_progress(self):
         for project in self:
             total_tasks = len(project.task_ids)
-            completed_tasks = len(project.task_ids.filtered(lambda task: task.status == 'close'))
+            # completed_tasks = len(project.task_ids.filtered(lambda task: task.status == 'close'))
+            completed_tasks = len(
+                project.task_ids.filtered(
+                    lambda task: task.status == 'done'
+                )
+            )
             
             if total_tasks > 0:
                 project.progress = (completed_tasks / total_tasks) * 100
@@ -310,32 +321,150 @@ class ProjectManagementProjects(models.Model):
                         f"Dự án '{rec.projects_name}' có ngày kết thúc thực tế ({rec.actual_end_date}) "
                         f"nhỏ hơn ngày bắt đầu ({rec.start_date})! Vui lòng kiểm tra lại."
                     )
-                
+      
+    # @api.model
+    # def create(self, vals):
+    #     if not vals.get('du_an_id') and vals.get('projects_name'):
+    #         status_mapping = {
+    #             'draft': 'chua_bat_dau',
+    #             'open': 'dang_thuc_hien',
+    #             'close': 'hoan_thanh',
+    #             'cancelled': 'huy_bo'
+    #         }
+    #         current_status = vals.get('status', 'draft')
+            
+    #         # Bóc tách chính xác ID người quản lý để truyền sang làm người phụ trách
+    #         manager_id = vals.get('manager_name')
+    #         if isinstance(manager_id, models.BaseModel):
+    #             manager_id = manager_id.id
+
+    #         du_an_val = {
+    #             'ten_du_an': vals.get('projects_name'),
+    #             'mo_ta': vals.get('ly_do_1') or '',
+    #             'tien_do_du_an': status_mapping.get(current_status, 'chua_bat_dau'),
+    #             'nguoi_phu_trach_id': manager_id or False, 
+    #         }
+    #         new_du_an = self.env['du_an'].create(du_an_val)
+    #         vals['du_an_id'] = new_du_an.id
+    #     return super(ProjectManagementProjects, self).create(vals)
     @api.model
     def create(self, vals):
+        # Đồng bộ sang module quan_ly_cong_viec
         if not vals.get('du_an_id') and vals.get('projects_name'):
-            status_mapping = {
-                'draft': 'chua_bat_dau',
-                'open': 'dang_thuc_hien',
-                'close': 'hoan_thanh',
-                'cancelled': 'huy_bo'
-            }
-            current_status = vals.get('status', 'draft')
-            
-            # Bóc tách chính xác ID người quản lý để truyền sang làm người phụ trách
-            manager_id = vals.get('manager_name')
-            if isinstance(manager_id, models.BaseModel):
-                manager_id = manager_id.id
+            vals['du_an_id'] = self._create_linked_du_an(vals)
 
-            du_an_val = {
-                'ten_du_an': vals.get('projects_name'),
-                'mo_ta': vals.get('ly_do_1') or '',
-                'tien_do_du_an': status_mapping.get(current_status, 'chua_bat_dau'),
-                'nguoi_phu_trach_id': manager_id or False, 
-            }
-            new_du_an = self.env['du_an'].create(du_an_val)
-            vals['du_an_id'] = new_du_an.id
-        return super(ProjectManagementProjects, self).create(vals)
+        # Tạo Project
+        project = super(ProjectManagementProjects, self).create(vals)
+        if project.du_an_id:
+            project.du_an_id.write({
+                'nhom_ids': [(6, 0, project.nhom_ids.ids)]
+            })
+        # Khởi tạo toàn bộ dữ liệu mặc định
+        project._initialize_project()
+
+        return project
+    def _create_linked_du_an(self, vals):
+        status_mapping = {
+            'draft': 'chua_bat_dau',
+            'open': 'dang_thuc_hien',
+            'close': 'hoan_thanh',
+            'cancelled': 'huy_bo'
+        }
+
+        manager_id = vals.get('manager_name')
+        if isinstance(manager_id, models.BaseModel):
+            manager_id = manager_id.id
+
+        # du_an_vals = {
+        #     'ten_du_an': vals.get('projects_name'),
+        #     'mo_ta': vals.get('ly_do_1') or '',
+        #     'nguoi_phu_trach_id': manager_id or False,
+        #     'tien_do_du_an': status_mapping.get(
+        #         vals.get('status', 'draft'),
+        #         'chua_bat_dau'
+        #     )
+        # }
+        du_an_vals = {
+            'ten_du_an': vals.get('projects_name'),
+            'mo_ta': vals.get('ly_do_1') or '',
+            'nguoi_phu_trach_id': manager_id or False,
+            'tien_do_du_an': status_mapping.get(
+                vals.get('status', 'draft'),
+                'chua_bat_dau'
+            ),
+            'nhom_ids': vals.get('nhom_ids', [])
+        }
+
+        du_an = self.env['du_an'].create(du_an_vals)
+
+        return du_an.id
+    def _initialize_project(self):
+        self.ensure_one()
+
+        self._create_default_budget()
+
+        self._create_default_stages()
+
+        self._ensure_dashboard()
+    def _create_default_budget(self):
+        self.ensure_one()
+
+        budget_model = self.env['budgets']
+
+        existing_budget = budget_model.search([
+            ('projects_id', '=', self.id)
+        ], limit=1)
+
+        if existing_budget:
+            return
+
+        budget_model.create({
+            'budgets_id': f"BG-{self.projects_id}",
+            'budgets_name': f"Ngân sách {self.projects_name}",
+            'projects_id': self.id,
+            'budget_planned': 0,
+            'budget_allocated': 0,
+            'budget_reserved': 0,
+        })
+    def _create_default_stages(self):
+        self.ensure_one()
+
+        if not self.du_an_id:
+            return
+
+        stage_model = self.env['giai_doan_cong_viec']
+
+        existing = stage_model.search([
+            ('du_an_id', '=', self.du_an_id.id)
+        ], limit=1)
+
+        if existing:
+            return
+
+        default_stages = [
+            ('Khởi tạo', 1),
+            ('Phân tích', 2),
+            ('Thiết kế', 3),
+            ('Thực hiện', 4),
+            ('Kiểm thử', 5),
+            ('Hoàn thành', 6),
+        ]
+
+        for name, order in default_stages:
+            stage_model.create({
+                'ten_giai_doan': name,
+                'thu_tu': order,
+                'du_an_id': self.du_an_id.id,
+            })
+    def _ensure_dashboard(self):
+        dashboard = self.env['dashboard'].search([], limit=1)
+
+        if not dashboard:
+            dashboard = self.env['dashboard'].create({})
+
+        if self.du_an_id and self.du_an_id.dashboard_id != dashboard:
+            self.du_an_id.dashboard_id = dashboard.id
+
 
     def write(self, vals):
         res = super(ProjectManagementProjects, self).write(vals)
@@ -357,6 +486,9 @@ class ProjectManagementProjects(models.Model):
                     if isinstance(manager_id, models.BaseModel):
                         manager_id = manager_id.id
                     up_vals['nguoi_phu_trach_id'] = manager_id or False
+                
+                if 'nhom_ids' in vals:
+                    up_vals['nhom_ids'] = vals['nhom_ids']
                 
                 if 'status' in vals:
                     up_vals['tien_do_du_an'] = status_mapping.get(vals['status'], 'chua_bat_dau')

@@ -43,6 +43,7 @@
                             <field name="projects_id"/>
                             <field name="projects_name"/>
                             <field name="manager_name"/>
+                            <field name="nhom_ids" widget="many2many_tags"/>
                             <field name="du_an_id" readonly="1"/> </group>
                         <group>
                             <field name="start_date"/>
@@ -54,8 +55,8 @@
                     <notebook>
                         <page string="Danh sách công việc">
                             <field name="task_ids">
-                                <tree editable="bottom">
-                                    <field name="taskss_id"/>
+                                <tree>
+                                    <field name="taskss_id" readonly="1"/>
                                     <field name="taskss_name"/>
                                     <field name="cong_viec_id"/>
                                     <field name="deadline"/>

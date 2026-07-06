@@ -86,7 +86,10 @@ class ProjectManagementTasks(models.Model):
     priority = fields.Selection([('0', 'Thấp'), ('1', 'Thường'), ('2', 'Cao')], string='Độ ưu tiên')
     status = fields.Selection([('todo', 'Cần làm'), ('doing', 'Đang làm'), ('done', 'Xong')], string='Trạng thái', default='todo')
     ly_do = fields.Text(string='Ghi chú/Lý do chậm trễ')
-    progress = fields.Float(string='Tiến độ task (%)')
+    progress = fields.Float(
+        string="Tiến độ (%)",
+        default=0.0
+    )
     
     expense_ids = fields.One2many('expenses', 'taskss_id', string='Chi phí phát sinh')
 
@@ -131,17 +134,17 @@ class ProjectManagementTasks(models.Model):
                     rec.cong_viec_id.with_context(skip_sync=True).write(up_vals)
         return res
     
-    @api.depends('start_date', 'deadline')
-    def _compute_progress(self):
-        today = date.today()
-        for project in self:
-            if project.start_date and project.deadline:
-                total_days = (project.deadline - project.start_date).days
-                elapsed_days = (today - project.start_date).days
+    # @api.depends('start_date', 'deadline')
+    # def _compute_progress(self):
+    #     today = date.today()
+    #     for project in self:
+    #         if project.start_date and project.deadline:
+    #             total_days = (project.deadline - project.start_date).days
+    #             elapsed_days = (today - project.start_date).days
 
-                if total_days > 0:
-                    project.progress = max(0, min(100, (elapsed_days / total_days) * 100))
-                else:
-                    project.progress = 100 if today >= project.deadline else 0
-            else:
-                project.progress = 0
+    #             if total_days > 0:
+    #                 project.progress = max(0, min(100, (elapsed_days / total_days) * 100))
+    #             else:
+    #                 project.progress = 100 if today >= project.deadline else 0
+    #         else:
+    #             project.progress = 0

@@ -29,6 +29,8 @@
                         <field name="ten_du_an" readonly="1"/>
                         <field name="mo_ta" readonly="1"/>
                         <field name="nguoi_phu_trach_id" readonly="1"/>
+                        <field name="nhom_ids"
+                            widget="many2many_tags"/>
                         <field name="nhan_vien_ids" widget="many2many_tags" readonly="1"/>
                         <field name="tien_do_du_an" readonly="1"/>
                         <field name="phan_tram_du_an" widget="progressbar" readonly="1"/>

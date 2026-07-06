@@ -89,3 +89,4 @@ class NhatKyCongViec(models.Model):
                 for nhan_vien in record.nhan_vien_ids:
                     if nhan_vien.id not in nhan_vien_du_an_ids:
                         raise ValidationError(f"Nhân viên {nhan_vien.display_name} không thuộc dự án này.")
+

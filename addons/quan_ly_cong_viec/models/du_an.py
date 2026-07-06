@@ -170,22 +170,40 @@
 from odoo import models, fields, api
 from datetime import datetime
 from odoo.exceptions import ValidationError
+import logging
+_logger = logging.getLogger(__name__)
 
 class DuAn(models.Model):
     _name = 'du_an'
     _description = 'Dự Án'
     _rec_name = 'ten_du_an'
+    
 
     ten_du_an = fields.Char(string='Tên Dự Án', required=True)
     mo_ta = fields.Text(string='Mô Tả')
     
     nguoi_phu_trach_id = fields.Many2one('nhan_vien', string='Người Phụ Trách', ondelete='set null')
-    nhan_vien_ids = fields.Many2many('nhan_vien', 'du_an_nhan_vien_rel', 'du_an_id', 'nhan_vien_id', string='Nhân Viên Tham Gia')
+    # nhan_vien_ids = fields.Many2many('nhan_vien', 'du_an_nhan_vien_rel', 'du_an_id', 'nhan_vien_id', string='Nhân Viên Tham Gia')
+    nhan_vien_ids = fields.Many2many(
+        'nhan_vien',
+        'du_an_nhan_vien_rel',
+        'du_an_id',
+        'nhan_vien_id',
+        string='Nhân Viên Tham Gia',
+        compute='_compute_nhan_vien_ids',
+        store=True,
+    )
     tai_nguyen_ids = fields.One2many('tai_nguyen', 'du_an_id', string='Danh Sách Tài Nguyên')
     cong_viec_ids = fields.One2many('cong_viec', 'du_an_id', string='Công Việc')
     dashboard_id = fields.Many2one('dashboard', string="Dashboard")
     danh_gia_nhan_vien_ids = fields.One2many('danh_gia_nhan_vien', 'du_an_id', string='Đánh Giá Nhân Viên')
-    
+    nhom_ids = fields.Many2many(
+        'nhom_du_an',
+        'du_an_nhom_rel',
+        'du_an_id',
+        'nhom_id',
+        string='Các nhóm thực hiện'
+    )
     tien_do_du_an = fields.Selection([
         ('chua_bat_dau', 'Chưa Bắt Đầu'),
         ('dang_thuc_hien', 'Đang Thực Hiện'),
@@ -211,27 +229,81 @@ class DuAn(models.Model):
             if record.phan_tram_du_an < 0 or record.phan_tram_du_an > 100:
                 raise ValidationError("Tiến độ dự án phải nằm trong khoảng từ 0% đến 100%.")
 
+    # @api.model
+    # def create(self, vals):
+    #     """ Tạo dự án trước để giữ nguyên người phụ trách, sau đó thêm họ vào danh sách tham gia """
+    #     record = super(DuAn, self).create(vals)
+    #     # # Nếu có người phụ trách, tự động thêm vào danh sách nhân viên tham gia bằng lệnh (4, ID) bảo mật của Odoo
+    #     # if record.nguoi_phu_trach_id:
+    #     #     record.write({
+    #     #         'nhan_vien_ids': [(4, record.nguoi_phu_trach_id.id)]
+    #     #     })
+    #     # return record
+    #     if record.nhom_ids:
+    #         member_ids = record.nhom_ids.mapped('nhan_vien_ids').ids
+
+    #         record.write({
+    #             'nhan_vien_ids': [(4, emp_id) for emp_id in member_ids]
+    #         })
+
+    @api.onchange('nhom_ids')
+    def _onchange_nhom_ids(self):
+        member_ids = self.nhom_ids.mapped('nhan_vien_ids').ids
+
+        if (
+            self.nguoi_phu_trach_id
+            and self.nguoi_phu_trach_id.id not in member_ids
+        ):
+            member_ids.append(self.nguoi_phu_trach_id.id)
+
+        self.nhan_vien_ids = [(6, 0, member_ids)]
+
+    # @api.model
+    # def create(self, vals):
+    #     """Tạo dự án và tự động đồng bộ toàn bộ thành viên từ các nhóm."""
+
+    #     record = super(DuAn, self).create(vals)
+
+    #     member_ids = record.nhom_ids.mapped('nhan_vien_ids').ids
+
+    #     # Đảm bảo người phụ trách luôn nằm trong dự án
+    #     if (
+    #         record.nguoi_phu_trach_id
+    #         and record.nguoi_phu_trach_id.id not in member_ids
+    #     ):
+    #         member_ids.append(record.nguoi_phu_trach_id.id)
+
+    #     record.write({
+    #         'nhan_vien_ids': [(6, 0, member_ids)]
+    #     })
+
+    #     return record
     @api.model
     def create(self, vals):
-        """ Tạo dự án trước để giữ nguyên người phụ trách, sau đó thêm họ vào danh sách tham gia """
-        record = super(DuAn, self).create(vals)
-        # Nếu có người phụ trách, tự động thêm vào danh sách nhân viên tham gia bằng lệnh (4, ID) bảo mật của Odoo
-        if record.nguoi_phu_trach_id:
-            record.write({
-                'nhan_vien_ids': [(4, record.nguoi_phu_trach_id.id)]
-            })
-        return record
+        return super(DuAn, self).create(vals)
 
+    # def write(self, vals):
+    #     """Đồng bộ thành viên dự án khi thay đổi nhóm hoặc người phụ trách."""
+
+    #     res = super(DuAn, self).write(vals)
+
+    #     if 'nhom_ids' in vals or 'nguoi_phu_trach_id' in vals:
+    #         for record in self:
+    #             member_ids = record.nhom_ids.mapped('nhan_vien_ids').ids
+
+    #             if (
+    #                 record.nguoi_phu_trach_id
+    #                 and record.nguoi_phu_trach_id.id not in member_ids
+    #             ):
+    #                 member_ids.append(record.nguoi_phu_trach_id.id)
+
+    #             super(DuAn, record).write({
+    #                 'nhan_vien_ids': [(6, 0, member_ids)]
+    #             })
+
+    #     return res
     def write(self, vals):
-        """ Cập nhật thông tin dự án và tự động bổ sung người phụ trách mới vào danh sách tham gia nếu chưa có """
-        res = super(DuAn, self).write(vals)
-        if 'nguoi_phu_trach_id' in vals and vals.get('nguoi_phu_trach_id'):
-            for record in self:
-                if record.nguoi_phu_trach_id.id not in record.nhan_vien_ids.ids:
-                    super(DuAn, record).write({
-                        'nhan_vien_ids': [(4, record.nguoi_phu_trach_id.id)]
-                    })
-        return res
+        return super(DuAn, self).write(vals)
     
     @api.depends('cong_viec_ids.phan_tram_cong_viec')
     def _compute_phan_tram_du_an(self):
@@ -241,3 +313,23 @@ class DuAn(models.Model):
                 record.phan_tram_du_an = total_progress / len(record.cong_viec_ids)
             else:
                 record.phan_tram_du_an = 0.0
+
+    @api.depends(
+        'nhom_ids',
+        'nhom_ids.nhan_vien_ids',
+        'nguoi_phu_trach_id'
+    )
+    def _compute_nhan_vien_ids(self):
+        for record in self:
+            employees = record.nhom_ids.mapped('nhan_vien_ids')
+
+            if record.nguoi_phu_trach_id:
+                employees |= record.nguoi_phu_trach_id
+
+            _logger.warning(
+                "PROJECT %s -> employees=%s",
+                record.ten_du_an,
+                employees.ids
+            )
+
+            record.nhan_vien_ids = [(6, 0, employees.ids)]
