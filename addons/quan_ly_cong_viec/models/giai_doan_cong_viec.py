@@ -8,7 +8,7 @@ class GiaiDoanCongViec(models.Model):
     ten_giai_doan = fields.Char(string='Tên Giai Đoạn', required=True)
     thu_tu = fields.Integer(string='Thứ Tự')
     
-    du_an_id = fields.Many2one('du_an', string='Dự Án', ondelete='cascade')
+    # du_an_id = fields.Many2one('du_an', string='Dự Án', ondelete='cascade')
 
 
     # trang_thai = fields.Selection([

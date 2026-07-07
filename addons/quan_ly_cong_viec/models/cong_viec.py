@@ -11,13 +11,21 @@ class CongViec(models.Model):
     mo_ta = fields.Text(string='Mô Tả')
     # du_an_id = fields.Many2one('du_an', string='Dự Án', required=True, ondelete='cascade')
     # SỬA DÒNG NÀY: Thêm domain lọc trạng thái dự án
+    # du_an_id = fields.Many2one(
+    #     'du_an', 
+    #     string='Dự Án', 
+    #     required=True, 
+    #     ondelete='cascade',
+    #     domain="[('tien_do_du_an', 'not in', ['huy_bo', 'hoan_thanh'])]"
+    # )
     du_an_id = fields.Many2one(
-        'du_an', 
-        string='Dự Án', 
-        required=True, 
+        'du_an',
+        string='Dự Án',
+        required=True,
         ondelete='cascade',
-        domain="[('tien_do_du_an', 'not in', ['huy_bo', 'hoan_thanh'])]"
+        domain="[('tien_do_du_an', '=', 'dang_thuc_hien')]"
     )
+
     nhom_id = fields.Many2one(
         'nhom_du_an',
         string='Nhóm thực hiện'
@@ -119,12 +127,7 @@ class CongViec(models.Model):
                     ]
                 }
             }
-            
-    @api.constrains('du_an_id')
-    def _check_du_an_tien_do(self):
-        for record in self:
-            if record.du_an_id and record.du_an_id.tien_do_du_an == 'hoan_thanh':
-                raise ValidationError("Không thể thêm công việc vào dự án đã hoàn thành.")
+
     
     # @api.constrains('nhan_vien_ids')
     # def _check_nhan_vien_trong_du_an(self):
@@ -138,8 +141,14 @@ class CongViec(models.Model):
     @api.constrains('du_an_id')
     def _check_du_an_tien_do(self):
         for record in self:
-            if record.du_an_id and record.du_an_id.tien_do_du_an in ['hoan_thanh', 'huy_bo']:
-                raise ValidationError("Không thể thêm hoặc gắn công việc vào dự án đã hoàn thành hoặc đã hủy bỏ.")
+            if (
+                record.du_an_id
+                and record.du_an_id.tien_do_du_an != 'dang_thuc_hien'
+            ):
+                raise ValidationError(
+                    "Chỉ được tạo công việc cho dự án đang thực hiện."
+                )
+
     @api.constrains('nhom_id', 'nhan_vien_ids')
     def _check_nhan_vien_trong_nhom(self):
         for record in self:
@@ -218,9 +227,14 @@ class CongViec(models.Model):
         if self.giai_doan_id or not self.du_an_id:
             return
 
+        # stage = self.env['giai_doan_cong_viec'].search(
+        #     [('du_an_id', '=', self.du_an_id.id)],
+        #     order='thu_tu asc',
+        #     limit=1
+        # )
         stage = self.env['giai_doan_cong_viec'].search(
-            [('du_an_id', '=', self.du_an_id.id)],
-            order='thu_tu asc',
+            [],
+            order='thu_tu',
             limit=1
         )
 
@@ -292,27 +306,28 @@ class CongViec(models.Model):
             #     if up_vals:
             #         pm_task.with_context(skip_sync=True).write(up_vals)
             if pm_task:
-                up_vals = {}
+                # up_vals = {}
 
-                if 'ten_cong_viec' in vals:
-                    up_vals['taskss_name'] = vals['ten_cong_viec']
+                # if 'ten_cong_viec' in vals:
+                #     up_vals['taskss_name'] = vals['ten_cong_viec']
 
-                if 'han_chot' in vals:
-                    up_vals['deadline'] = vals['han_chot']
+                # if 'han_chot' in vals:
+                #     up_vals['deadline'] = vals['han_chot']
 
-                if 'mo_ta' in vals:
-                    up_vals['ly_do'] = vals['mo_ta']
+                # if 'mo_ta' in vals:
+                #     up_vals['ly_do'] = vals['mo_ta']
 
-                up_vals['progress'] = record.phan_tram_cong_viec
+                # up_vals['progress'] = record.phan_tram_cong_viec
 
-                if record.phan_tram_cong_viec == 0:
-                    up_vals['status'] = 'todo'
-                elif record.phan_tram_cong_viec < 100:
-                    up_vals['status'] = 'doing'
-                else:
-                    up_vals['status'] = 'done'
+                # if record.phan_tram_cong_viec == 0:
+                #     up_vals['status'] = 'todo'
+                # elif record.phan_tram_cong_viec < 100:
+                #     up_vals['status'] = 'doing'
+                # else:
+                #     up_vals['status'] = 'done'
 
-                pm_task.with_context(skip_sync=True).write(up_vals)
+                # pm_task.with_context(skip_sync=True).write(up_vals)
+                record._sync_progress_to_pm()
         return res
     
     def unlink(self):
@@ -323,3 +338,27 @@ class CongViec(models.Model):
                 .unlink()
 
         return super().unlink()
+    
+    def _sync_progress_to_pm(self):
+        for record in self:
+
+            pm_task = self.env['taskss'].search(
+                [('cong_viec_id', '=', record.id)],
+                limit=1
+            )
+
+            if not pm_task:
+                continue
+
+            vals = {
+                'progress': record.phan_tram_cong_viec,
+            }
+
+            if record.phan_tram_cong_viec == 0:
+                vals['status'] = 'todo'
+            elif record.phan_tram_cong_viec < 100:
+                vals['status'] = 'doing'
+            else:
+                vals['status'] = 'done'
+
+            pm_task.with_context(skip_sync=True).write(vals)

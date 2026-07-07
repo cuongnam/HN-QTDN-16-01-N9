@@ -278,7 +278,7 @@ class ProjectManagementProjects(models.Model):
     budget_ids = fields.One2many('budgets', 'projects_id', string='Ngân sách dự án')
     progress = fields.Float(string='Tiến độ (%)', compute='_compute_progress',store=True)
 
-    @api.depends('task_ids.status')
+    # @api.depends('task_ids.status')
     # def _compute_progress(self):
     #     for rec in self:
     #         tasks = rec.task_ids
@@ -286,18 +286,33 @@ class ProjectManagementProjects(models.Model):
     #             rec.progress = sum(tasks.mapped('progress')) / len(tasks)
     #         else:
     #             rec.progress = 0.0
+    @api.depends(
+        'task_ids.progress',
+        'task_ids.status'
+    )
+
+    # def _compute_progress(self):
+    #     for project in self:
+    #         total_tasks = len(project.task_ids)
+    #         # completed_tasks = len(project.task_ids.filtered(lambda task: task.status == 'close'))
+    #         completed_tasks = len(
+    #             project.task_ids.filtered(
+    #                 lambda task: task.status == 'done'
+    #             )
+    #         )
+            
+    #         if total_tasks > 0:
+    #             project.progress = (completed_tasks / total_tasks) * 100
+    #         else:
+    #             project.progress = 0
+
     def _compute_progress(self):
         for project in self:
-            total_tasks = len(project.task_ids)
-            # completed_tasks = len(project.task_ids.filtered(lambda task: task.status == 'close'))
-            completed_tasks = len(
-                project.task_ids.filtered(
-                    lambda task: task.status == 'done'
+            if project.task_ids:
+                project.progress = (
+                    sum(project.task_ids.mapped('progress'))
+                    / len(project.task_ids)
                 )
-            )
-            
-            if total_tasks > 0:
-                project.progress = (completed_tasks / total_tasks) * 100
             else:
                 project.progress = 0
 
@@ -403,7 +418,7 @@ class ProjectManagementProjects(models.Model):
 
         self._create_default_budget()
 
-        self._create_default_stages()
+        # self._create_default_stages()
 
         self._ensure_dashboard()
     def _create_default_budget(self):
@@ -426,36 +441,37 @@ class ProjectManagementProjects(models.Model):
             'budget_allocated': 0,
             'budget_reserved': 0,
         })
-    def _create_default_stages(self):
-        self.ensure_one()
+    # def _create_default_stages(self):
+    #     self.ensure_one()
 
-        if not self.du_an_id:
-            return
+    #     if not self.du_an_id:
+    #         return
 
-        stage_model = self.env['giai_doan_cong_viec']
+    #     stage_model = self.env['giai_doan_cong_viec']
 
-        existing = stage_model.search([
-            ('du_an_id', '=', self.du_an_id.id)
-        ], limit=1)
+    #     existing = stage_model.search([
+    #         ('du_an_id', '=', self.du_an_id.id)
+    #     ], limit=1)
 
-        if existing:
-            return
+    #     if existing:
+    #         return
 
-        default_stages = [
-            ('Khởi tạo', 1),
-            ('Phân tích', 2),
-            ('Thiết kế', 3),
-            ('Thực hiện', 4),
-            ('Kiểm thử', 5),
-            ('Hoàn thành', 6),
-        ]
+    #     default_stages = [
+    #         ('Khởi tạo', 1),
+    #         ('Phân tích', 2),
+    #         ('Thiết kế', 3),
+    #         ('Thực hiện', 4),
+    #         ('Kiểm thử', 5),
+    #         ('Hoàn thành', 6),
+    #     ]
 
-        for name, order in default_stages:
-            stage_model.create({
-                'ten_giai_doan': name,
-                'thu_tu': order,
-                'du_an_id': self.du_an_id.id,
-            })
+    #     for name, order in default_stages:
+    #         stage_model.create({
+    #             'ten_giai_doan': name,
+    #             'thu_tu': order,
+    #             'du_an_id': self.du_an_id.id,
+    #         })
+
     def _ensure_dashboard(self):
         dashboard = self.env['dashboard'].search([], limit=1)
 

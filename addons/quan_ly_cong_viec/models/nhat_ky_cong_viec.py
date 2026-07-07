@@ -56,6 +56,8 @@ class NhatKyCongViec(models.Model):
         record = super(NhatKyCongViec, self).create(vals)
         record.cong_viec_id._compute_phan_tram_cong_viec()
         record.cong_viec_id.du_an_id._compute_phan_tram_du_an()
+
+        record.cong_viec_id._sync_progress_to_pm()
         return record
 
     def write(self, vals):
@@ -63,6 +65,8 @@ class NhatKyCongViec(models.Model):
         for record in self:
             record.cong_viec_id._compute_phan_tram_cong_viec()
             record.cong_viec_id.du_an_id._compute_phan_tram_du_an()
+
+            record.cong_viec_id._sync_progress_to_pm()
         return res
 
     def unlink(self):
@@ -71,6 +75,9 @@ class NhatKyCongViec(models.Model):
         for record in records:
             record._compute_phan_tram_cong_viec()
             record.du_an_id._compute_phan_tram_du_an()
+
+
+            record._sync_progress_to_pm()
         return res
 
 
